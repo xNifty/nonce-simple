@@ -1,6 +1,6 @@
 {
   "name": "nonce-simple",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate a nonce to use to verify that scripts are intended to be loaded.",
   "main": "index.js",
   "scripts": {

@@ -17,15 +17,15 @@ export function generateNonce() {
 /*
     Setup the directives for use in CSP and then return it
 */
-export function getDirectives(nonce, options) {
+export function getDirectives(nonce, options = {}) {
   var self = `'self'`;
   var none = `'none'`;
-  var scripts = options.scripts;
-  var styles = options.styles;
-  var fonts = options.fonts;
-  var connect = options.connect;
-  var frame = options.frame;
-  var reportTo = options.reportTo;
+  var scripts = options.scripts ? options.scripts : [];
+  var styles = options.styles ? options.styles : [];
+  var fonts = options.fonts ? options.fonts : [];
+  var connect = options.connect ? options.connect : [];
+  var frame = options.frame ? options.frame : [];
+  var reportTo = options.reportTo ? options.reportTo : [];
   return {
     defaultSrc: [self],
     scriptSrc: [self, nonce, ...scripts],
