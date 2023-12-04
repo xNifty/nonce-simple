@@ -14,5 +14,9 @@
   "type": "module",
   "dependencies": {
     "uuid": "^9.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xNifty/nonce-simple.git"
   }
 }
