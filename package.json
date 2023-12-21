@@ -18,5 +18,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/xNifty/nonce-simple.git"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
