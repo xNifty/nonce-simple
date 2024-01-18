@@ -4,14 +4,13 @@
     This is a piece of middleware that we can use to generate a nonce on a page load
     The nonce is regenerated on every page load so that we don't reuse nonces across different pages
 */
-import { v4 } from "uuid";
+import { randomBytes } from "crypto";
 
 /*
     Generate nonce
 */
 export function generateNonce() {
-  const rhyphen = /-/g;
-  return v4().replace(rhyphen, ``);
+  return randomBytes(16).toString("hex");
 }
 
 /*
