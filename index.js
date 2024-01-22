@@ -4,19 +4,23 @@
     This is a piece of middleware that we can use to generate a nonce on a page load
     The nonce is regenerated on every page load so that we don't reuse nonces across different pages
 */
-import { randomBytes } from "crypto";
+"use strict";
+var crypto = require("crypto");
+
+module.exports.generateNonce = generateNonce;
+module.exports.getDirectives = getDirectives;
 
 /*
     Generate nonce
 */
-export function generateNonce() {
-  return randomBytes(16).toString("hex");
+function generateNonce() {
+  return crypto.randomBytes(16).toString("hex");
 }
 
 /*
     Setup the directives for use in CSP and then return it
 */
-export function getDirectives(nonce, options = {}) {
+function getDirectives(nonce, options = {}) {
   var self = `'self'`;
   var none = `'none'`;
   var scripts = options.scripts ? options.scripts : [];
@@ -39,8 +43,3 @@ export function getDirectives(nonce, options = {}) {
     reportUri: reportTo,
   };
 }
-
-export default {
-  generateNonce,
-  getDirectives,
-};

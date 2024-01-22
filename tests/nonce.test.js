@@ -1,4 +1,4 @@
-import { generateNonce, getDirectives } from "./index.js";
+import { generateNonce, getDirectives } from "../index.js";
 
 describe("generateNonce", () => {
   it("should generate a nonce", () => {
