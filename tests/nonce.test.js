@@ -31,6 +31,7 @@ describe("getDirectives", () => {
       formAction: ["'self'"],
       frameAncestors: ["'none'"],
       reportUri: [],
+      requireTrustedTypesFor: [],
     });
   });
 
@@ -58,6 +59,7 @@ describe("getDirectives", () => {
       formAction: ["'self'"],
       frameAncestors: ["'none'"],
       reportUri: ["report1.com", "report2.com"],
+      requireTrustedTypesFor: [],
     });
   });
 });
