@@ -39,7 +39,8 @@ const nonceOptions = {
   ],
   connect: [`https://cdn.jsdelivr.net`],
   frame: [`https://www.google.com/recaptcha/`],
-  reportTo: "https://ryanmalacina.report-uri.com/r/d/csp/enforce",
+  reportTo: "https://test.report-uri.com/r/d/csp/enforce",
+  requireTrustedTypesFor: ["'script'"]
 };
 
 // Add nonce to res.locals

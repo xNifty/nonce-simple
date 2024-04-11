@@ -11,5 +11,6 @@ export function getDirectives(nonce: any, options?: {}): {
     formAction: string[];
     frameAncestors: string[];
     reportUri: any;
+    requireTrustedTypesFor: any;
 };
 //# sourceMappingURL=index.d.ts.map
