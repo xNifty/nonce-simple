@@ -29,6 +29,7 @@ function getDirectives(nonce, options = {}) {
   var connect = options.connect ? options.connect : [];
   var frame = options.frame ? options.frame : [];
   var reportTo = options.reportTo ? options.reportTo : [];
+  var images = options.images ? options.images : [];
   var requireTrustedTypesFor = options.requireTrustedTypesFor
     ? options.requireTrustedTypesFor
     : [];
@@ -44,6 +45,7 @@ function getDirectives(nonce, options = {}) {
     formAction: [self],
     frameAncestors: [none],
     reportUri: reportTo,
+    imgSrc: [self, ...images],
     requireTrustedTypesFor: requireTrustedTypesFor,
   };
 }

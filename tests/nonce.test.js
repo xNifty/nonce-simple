@@ -31,6 +31,7 @@ describe("getDirectives", () => {
       formAction: ["'self'"],
       frameAncestors: ["'none'"],
       reportUri: [],
+      imgSrc: ["'self'"],
       requireTrustedTypesFor: [],
     });
   });
@@ -43,6 +44,7 @@ describe("getDirectives", () => {
       connect: ["connect1.com", "connect2.com"],
       frame: ["frame1.com", "frame2.com"],
       reportTo: ["report1.com", "report2.com"],
+      images: ["images1.com", "images2.com"],
     };
 
     const directives = getDirectives("test-nonce", options);
@@ -59,6 +61,7 @@ describe("getDirectives", () => {
       formAction: ["'self'"],
       frameAncestors: ["'none'"],
       reportUri: ["report1.com", "report2.com"],
+      imgSrc: ["'self'", "images1.com", "images2.com"],
       requireTrustedTypesFor: [],
     });
   });
