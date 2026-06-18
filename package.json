@@ -1,13 +1,20 @@
 {
   "name": "nonce-simple",
-  "version": "1.1.2",
-  "description": "Generate a nonce to use to verify that scripts are intended to be loaded.",
-  "main": "./dist/index.js",
+  "version": "2.0.0-alpha.1",
+  "description": "Generate nonces and build modern Helmet-compatible Content Security Policy directives.",
+  "main": "./index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "jest"
+    "build": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "nonce"
+    "nonce",
+    "csp",
+    "content-security-policy",
+    "helmet",
+    "security"
   ],
   "author": "Ryan M.",
   "license": "MIT",
@@ -16,18 +23,21 @@
     "url": "https://github.com/xNifty/nonce-simple.git"
   },
   "files": [
-    "dist",
-    "index.js"
+    "index.js",
+    "dist"
   ],
   "bugs": {
     "url": "https://github.com/xnifty/nonce-simple/issues"
   },
-  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@babel/core": "^7.23.6",
     "@babel/preset-env": "^7.23.6",
     "@babel/preset-react": "^7.23.3",
     "babel-jest": "^29.7.0",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "typescript": "^5.7.2"
   }
 }
