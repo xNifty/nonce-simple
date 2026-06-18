@@ -2,7 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
-## [2.0.0] - 2026-06-18
+## [2.0.0-preview.0] - 2026-06-18
+
+Preview release on branch `cursor/v2-0-0-breaking-preview-fed1` for local testing before the final 2.0.0 merge to `main`.
+
+Includes everything from [2.0.0] below.
+
+## [2.0.0] - Unreleased
 
 ### Added
 
@@ -35,4 +41,5 @@ All notable changes to this project are documented in this file.
 - Initial public API with `generateNonce()` and `getDirectives()`
 - Basic directive support for scripts, styles, fonts, connect, frame, images, and Trusted Types
 
+[2.0.0-preview.0]: https://github.com/xNifty/nonce-simple/compare/v1.1.2...cursor/v2-0-0-breaking-preview-fed1
 [2.0.0]: https://github.com/xNifty/nonce-simple/compare/v1.1.2...v2.0.0

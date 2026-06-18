@@ -1,5 +1,13 @@
 # nonce-simple
 
+> **Preview branch:** This branch contains the full **2.0.0** breaking-change release for local testing. It is not yet on `main`. Install from GitHub with:
+>
+> ```bash
+> npm install github:xNifty/nonce-simple#cursor/v2-0-0-breaking-preview-fed1
+> ```
+>
+> See [CHANGELOG.md](./CHANGELOG.md) for breaking changes before upgrading from 1.x.
+
 Generate per-request nonces and build modern [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) directive objects for [Helmet](https://helmetjs.github.io/).
 
 `nonce-simple` focuses on two jobs:
