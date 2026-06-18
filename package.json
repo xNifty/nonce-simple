@@ -1,6 +1,6 @@
 {
   "name": "nonce-simple",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0",
   "description": "Generate nonces and build modern Helmet-compatible Content Security Policy directives.",
   "main": "./index.js",
   "types": "./dist/index.d.ts",
