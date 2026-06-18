@@ -1,6 +1,11 @@
 import {
+  createNonceMiddleware,
+  formatNonce,
   generateNonce,
   getDirectives,
+  getReportingEndpointsHeader,
+  hashSource,
+  nonceDirective,
 } from "../index.js";
 
 describe("generateNonce", () => {
@@ -25,14 +30,62 @@ describe("generateNonce", () => {
   });
 });
 
+describe("formatNonce", () => {
+  it("should wrap a raw nonce in single quotes", () => {
+    expect(formatNonce("abc123")).toBe("'nonce-abc123'");
+  });
+
+  it("should accept an already quoted nonce", () => {
+    expect(formatNonce("'nonce-abc123'")).toBe("'nonce-abc123'");
+  });
+});
+
+describe("hashSource", () => {
+  it("should generate a sha256 source expression", () => {
+    const hash = hashSource("console.log('hi')");
+
+    expect(hash).toMatch(/^'sha256-[A-Za-z0-9+/]+='$/);
+    expect(hashSource("console.log('hi')")).toBe(hash);
+  });
+});
+
+describe("getReportingEndpointsHeader", () => {
+  it("should format reporting endpoints for the Reporting-Endpoints header", () => {
+    expect(
+      getReportingEndpointsHeader({
+        csp: "https://example.com/csp-report",
+        default: "https://example.com/default-report",
+      })
+    ).toBe(
+      'csp="https://example.com/csp-report", default="https://example.com/default-report"'
+    );
+  });
+});
+
+describe("createNonceMiddleware and nonceDirective", () => {
+  it("should attach a nonce to res.locals and resolve a Helmet directive", () => {
+    const middleware = createNonceMiddleware();
+    const req = {};
+    const res = { locals: {} };
+
+    middleware(req, res, () => {});
+
+    const directive = nonceDirective()(req, res);
+
+    expect(res.locals.nonce).toMatch(/^[0-9a-f]+$/i);
+    expect(res.locals.cspNonce).toBe(res.locals.nonce);
+    expect(directive).toBe(formatNonce(res.locals.nonce));
+  });
+});
+
 describe("getDirectives", () => {
   it("should return secure defaults when no options are provided", () => {
-    const directives = getDirectives("test-nonce");
+    const directives = getDirectives("abc123");
 
     expect(directives).toEqual({
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "test-nonce"],
-      styleSrc: ["'self'", "test-nonce"],
+      scriptSrc: ["'self'", "'nonce-abc123'"],
+      styleSrc: ["'self'", "'nonce-abc123'"],
       fontSrc: ["'self'"],
       connectSrc: ["'self'"],
       frameSrc: ["'self'"],
@@ -69,12 +122,12 @@ describe("getDirectives", () => {
       upgradeInsecureRequests: true,
     };
 
-    const directives = getDirectives("test-nonce", options);
+    const directives = getDirectives("abc123", options);
 
     expect(directives).toEqual({
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "test-nonce", "https://cdn.example.com"],
-      styleSrc: ["'self'", "test-nonce", "https://fonts.googleapis.com"],
+      scriptSrc: ["'self'", "'nonce-abc123'", "https://cdn.example.com"],
+      styleSrc: ["'self'", "'nonce-abc123'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       connectSrc: ["'self'", "https://api.example.com"],
       frameSrc: ["'self'", "https://www.google.com/recaptcha/"],
@@ -83,9 +136,9 @@ describe("getDirectives", () => {
       manifestSrc: ["'self'", "https://cdn.example.com"],
       mediaSrc: ["'self'", "https://media.example.com"],
       childSrc: ["'self'", "https://child.example.com"],
-      scriptSrcElem: ["'self'", "test-nonce", "'strict-dynamic'"],
+      scriptSrcElem: ["'self'", "'nonce-abc123'", "'strict-dynamic'"],
       scriptSrcAttr: ["'self'", "'none'"],
-      styleSrcElem: ["'self'", "test-nonce", "'unsafe-inline'"],
+      styleSrcElem: ["'self'", "'nonce-abc123'", "'unsafe-inline'"],
       styleSrcAttr: ["'self'", "'unsafe-hashes'"],
       webrtc: ["'self'"],
       trustedTypes: ["default"],
@@ -101,8 +154,32 @@ describe("getDirectives", () => {
     });
   });
 
+  it("should apply the strict-dynamic profile", () => {
+    const directives = getDirectives("abc123", { profile: "strict-dynamic" });
+
+    expect(directives.scriptSrc).toEqual([
+      "'self'",
+      "'nonce-abc123'",
+      "'strict-dynamic'",
+    ]);
+  });
+
+  it("should apply the development profile", () => {
+    const directives = getDirectives("abc123", { profile: "development" });
+
+    expect(directives.connectSrc).toEqual([
+      "'self'",
+      "ws:",
+      "wss:",
+      "http://localhost:*",
+      "https://localhost:*",
+    ]);
+    expect(directives.scriptSrcAttr).toEqual(["'self'", "'none'"]);
+    expect(directives.styleSrcAttr).toEqual(["'self'", "'unsafe-inline'"]);
+  });
+
   it("should reject non-array option values", () => {
-    expect(() => getDirectives("test-nonce", { scripts: "bad" })).toThrow(
+    expect(() => getDirectives("abc123", { scripts: "bad" })).toThrow(
       "options.scripts must be an array when provided"
     );
   });
