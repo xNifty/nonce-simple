@@ -9,6 +9,10 @@ var crypto = require("crypto");
 
 var SELF = "'self'";
 var NONE = "'none'";
+var STRICT_DYNAMIC = "'strict-dynamic'";
+
+var SUPPORTED_PROFILES = ["strict", "strict-dynamic", "development"];
+var SUPPORTED_HASH_ALGORITHMS = ["sha256", "sha384", "sha512"];
 
 var DEFAULT_OPTION_ARRAYS = [
   "scripts",
@@ -33,14 +37,144 @@ var DEFAULT_OPTION_ARRAYS = [
   "reportTo",
 ];
 
+var DEVELOPMENT_CONNECT_SOURCES = [
+  "ws:",
+  "wss:",
+  "http://localhost:*",
+  "https://localhost:*",
+];
+
 module.exports = {
   generateNonce: generateNonce,
+  formatNonce: formatNonce,
+  hashSource: hashSource,
   getDirectives: getDirectives,
+  getReportingEndpointsHeader: getReportingEndpointsHeader,
+  createNonceMiddleware: createNonceMiddleware,
+  nonceDirective: nonceDirective,
 };
 
 function generateNonce(byteLength) {
   var length = byteLength === undefined ? 16 : byteLength;
   return crypto.randomBytes(length).toString("hex");
+}
+
+function formatNonce(nonce) {
+  if (nonce === undefined || nonce === null || nonce === "") {
+    throw new TypeError("nonce is required");
+  }
+
+  if (nonce.charAt(0) === "'" && nonce.charAt(nonce.length - 1) === "'") {
+    return nonce;
+  }
+
+  var value = String(nonce).replace(/^nonce-/, "");
+  return "'nonce-" + value + "'";
+}
+
+function hashSource(content, algorithm) {
+  var algo = algorithm || "sha256";
+
+  if (SUPPORTED_HASH_ALGORITHMS.indexOf(algo) === -1) {
+    throw new Error("Unsupported hash algorithm: " + algo);
+  }
+
+  if (typeof content !== "string") {
+    throw new TypeError("content must be a string");
+  }
+
+  var digest = crypto.createHash(algo).update(content, "utf8").digest("base64");
+  return "'" + algo + "-" + digest + "'";
+}
+
+function getReportingEndpointsHeader(endpoints) {
+  if (!endpoints || typeof endpoints !== "object" || Array.isArray(endpoints)) {
+    throw new TypeError("endpoints must be an object");
+  }
+
+  return Object.keys(endpoints)
+    .map(function (name) {
+      return name + '="' + endpoints[name] + '"';
+    })
+    .join(", ");
+}
+
+function createNonceMiddleware(options) {
+  options = options || {};
+  var localKey = options.localKey || "cspNonce";
+  var rawKey = options.rawKey || "nonce";
+  var byteLength = options.byteLength;
+
+  return function nonceMiddleware(req, res, next) {
+    var nonce = generateNonce(byteLength);
+    res.locals[rawKey] = nonce;
+    res.locals[localKey] = nonce;
+    next();
+  };
+}
+
+function nonceDirective(localKey) {
+  var key = localKey || "cspNonce";
+
+  return function resolveNonce(req, res) {
+    var value = res.locals[key];
+
+    if (value === undefined || value === null || value === "") {
+      throw new Error("Missing nonce in res.locals." + key);
+    }
+
+    return formatNonce(value);
+  };
+}
+
+function appendUnique(existing, additions) {
+  var values = existing.slice();
+
+  additions.forEach(function (entry) {
+    if (values.indexOf(entry) === -1) {
+      values.push(entry);
+    }
+  });
+
+  return values;
+}
+
+function resolveProfileOptions(options) {
+  options = options || {};
+  var resolved = Object.assign({}, options);
+  var profile = resolved.profile || "strict";
+
+  if (SUPPORTED_PROFILES.indexOf(profile) === -1) {
+    throw new Error(
+      "Unknown CSP profile: " + profile + ". Expected one of: " + SUPPORTED_PROFILES.join(", ")
+    );
+  }
+
+  delete resolved.profile;
+
+  if (profile === "strict-dynamic" || resolved.strictDynamic === true) {
+    resolved.scripts = appendUnique(normalizeOptionArray(resolved, "scripts"), [
+      STRICT_DYNAMIC,
+    ]);
+    delete resolved.strictDynamic;
+  }
+
+  if (profile === "development") {
+    resolved.connect = appendUnique(
+      normalizeOptionArray(resolved, "connect"),
+      DEVELOPMENT_CONNECT_SOURCES
+    );
+
+    if (resolved.scriptAttrs === undefined) {
+      resolved.scriptAttrs = [NONE];
+    }
+
+    if (resolved.styleAttrs === undefined) {
+      resolved.styleAttrs = ["'unsafe-inline'"];
+    }
+  }
+
+  return resolved;
 }
 
 function normalizeOptionArray(options, key) {
@@ -59,18 +193,18 @@ function withSelfAndNonce(sources, nonce, includeNonce) {
   var values = [SELF];
 
   if (includeNonce && nonce !== undefined && nonce !== null && nonce !== "") {
-    values.push(nonce);
+    values.push(typeof nonce === "function" ? nonce : formatNonceValue(nonce));
   }
 
   return values.concat(sources);
 }
 
-function assignDirective(directives, key, value) {
-  if (value === undefined || value === null) {
-    return;
+function formatNonceValue(nonce) {
+  if (typeof nonce === "function") {
+    return nonce;
   }
 
-  directives[key] = value;
+  return formatNonce(nonce);
 }
 
 function assignFetchDirective(
@@ -85,14 +219,24 @@ function assignFetchDirective(
     return;
   }
 
-  directives[key] = withSelfAndNonce(sources, nonce, includeNonce);
+  var values = [SELF];
+
+  if (includeNonce && nonce !== undefined && nonce !== null && nonce !== "") {
+    if (typeof nonce === "function") {
+      values.push(nonce);
+    } else {
+      values.push(formatNonce(nonce));
+    }
+  }
+
+  directives[key] = values.concat(sources);
 }
 
 /*
   Build a Helmet-compatible directives object for contentSecurityPolicy.
 */
 function getDirectives(nonce, options) {
-  options = options || {};
+  options = resolveProfileOptions(options);
 
   DEFAULT_OPTION_ARRAYS.forEach(function (key) {
     if (
